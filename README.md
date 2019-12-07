@@ -1,0 +1,2 @@
+# mancala_kivy
+Mancala
