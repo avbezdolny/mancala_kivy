@@ -51,7 +51,7 @@ presplash.filename = %(source.dir)s/data/presplash.9.png
 # (str) Icon of the application
 icon.filename = %(source.dir)s/data/icon.png
 
-# (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
+# (str) Supported orientation (one of landscape, sensorLandscape, portrait or all) >> landscape для 1.11.1 не работает !!!
 orientation = all
 
 # (list) List of service to declare
