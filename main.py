@@ -184,6 +184,13 @@ class MancalaApp(App):
         Window.bind(on_key_down=self.on_key_down)
         self.board.bind(size=Clock.schedule_once(self.resize, 0.150))
         
+        # Android screen rotation ;)
+        if platform == 'android':
+            from jnius import autoclass
+            ActivityInfo = autoclass('android.content.pm.ActivityInfo')
+            activity = autoclass('org.kivy.android.PythonActivity').mActivity
+            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+        
         # load data settings
         if platform in ['win', 'linux', 'mac']:  # desktop
             self.store = DictStore(join(self.user_data_dir, 'store.dat'))
@@ -230,6 +237,8 @@ class MancalaApp(App):
         
         # save matrix
         seeds_index = [e for e in range(self.game_seeds)]
+        moving = False
+        
         for matrix_row in range(2):
             for matrix_col in range(7):
                 for matrix_seeds in range(self.save_matrix[matrix_row][matrix_col]):
@@ -240,17 +249,22 @@ class MancalaApp(App):
                     rand_pos = self.seed_pos(matrix_row, matrix_col + 1 if matrix_row == 0 else matrix_col, self.fields[matrix_row][matrix_col].is_ambar)
                     anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
                     anim.start(self.seeds[random_index])
-        
-        Clock.schedule_once(self.after_start_game, 0.5)
+                    
+                    if not moving:
+                        moving = True
+                        anim.bind(on_complete=self.after_start_game)
     
     def start_game(self):
         self.save_gameover = False
         self.first_step = [True, True]
+        self.player_turn = 0 if random.randint(1, 100) <= 50 else 1
         self.seeds = [Seed(size_hint=(None, None), size=self.seed_size) for s in range(self.game_seeds)]
         
         for c in range(int(self.game_seeds/12)):
             for s in range(12):
                 self.seeds[12*c + s].source = 'data/' + str(c+1) + '.png'
+        
+        moving = False
         
         for i in range(int(self.game_seeds/12)):
             for j in range(6):
@@ -266,9 +280,10 @@ class MancalaApp(App):
                 
                 anim1.start(self.seeds[j + 12*i])
                 anim2.start(self.seeds[j + 6 + 12*i])
-
-        self.player_turn = 0 if random.randint(1, 100) <= 50 else 1
-        Clock.schedule_once(self.after_start_game, 0.5)
+                
+                if not moving:
+                    moving = True
+                    anim2.bind(on_complete=self.after_start_game)
     
     def after_start_game(self, *args):
         self.turn(self.player_turn)
@@ -484,13 +499,17 @@ class MancalaApp(App):
             self.anim_move()
     
     def anim_move(self):
+        moving = False
+        
         for seed in self.hand:
             rand_pos = self.seed_pos(self.board_row, self.board_col + (1 if self.board_row == 0 else 0), self.fields[self.board_row][self.board_col].is_ambar)
             anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
             anim.start(seed)
-        
-        if self.is_sound and self.sound_move: self.sound_move.play()
-        Clock.schedule_once(self.after_move, 0.35)
+            
+            if not moving:
+                moving = True
+                anim.bind(on_complete=self.after_move)
+                if self.is_sound and self.sound_move: self.sound_move.play()
     
     def after_move(self, *args):
         if self.hand:
@@ -543,13 +562,17 @@ class MancalaApp(App):
                     self.next_player()
     
     def anim_to_ambar(self):
+        moving = False
+        
         for seed in self.hand:
             rand_pos = self.seed_pos(self.player_turn, (7 if self.player_turn == 0 else 0), self.fields[self.player_turn][6 if self.player_turn == 0 else 0].is_ambar)
             anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
             anim.start(seed)
-        
-        if self.is_sound and self.sound_move: self.sound_move.play()
-        Clock.schedule_once(self.after_ambar, 0.35)
+            
+            if not moving:
+                moving = True
+                anim.bind(on_complete=self.after_ambar)
+                if self.is_sound and self.sound_move: self.sound_move.play()
     
     def after_ambar(self, *args):
         if self.hand:
@@ -590,7 +613,7 @@ class MancalaApp(App):
 
         if counter[0] == 0 and counter[1] == 0:
             # clear fields
-            Clock.schedule_once(self.after_game_over, 0.5)
+            Clock.schedule_once(self.after_game_over, 0.25)
         else:
             # animation to ambar
             player = counter.index(max(counter[0], counter[1]))
@@ -605,13 +628,17 @@ class MancalaApp(App):
     
     def anim_game_over(self, player):
         self.player_turn = player  # for select ambar in after_game_over()
+        moving = False
+        
         for seed in self.hand:
             rand_pos = self.seed_pos(player, (7 if player == 0 else 0), self.fields[player][6 if player == 0 else 0].is_ambar)
             anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
             anim.start(seed)
-        
-        if self.is_sound and self.sound_move: self.sound_move.play()
-        Clock.schedule_once(self.after_game_over, 0.5)
+            
+            if not moving:
+                moving = True
+                anim.bind(on_complete=self.after_game_over)
+                if self.is_sound and self.sound_move: self.sound_move.play()
     
     def after_game_over(self, *args):
         for seed in self.hand:
@@ -675,14 +702,18 @@ class MancalaApp(App):
                 temp2 = []
                 a -= 2
 
+            moving = False
+            
             for i in range(2):
                 for j, field in enumerate(self.fields[i]):
                     for seed in field.seeds:
                         rand_pos = self.seed_pos(i, (j+1 if i == 0 else j), field.is_ambar)
                         anim = Animation(pos=rand_pos, duration=0.5, transition='linear')
                         anim.start(seed)
-            
-            Clock.schedule_once(self.after_rotate, 0.75)
+                        
+                        if not moving:
+                            moving = True
+                            anim.bind(on_complete=self.after_rotate)
 
     def after_rotate(self, *args):
         self.next_player()
