@@ -38,33 +38,40 @@ class Board(Widget):
 class Field(ButtonBehavior, Widget):
     seeds = ListProperty([])
     is_ambar = BooleanProperty(False)
-    bg_color = ListProperty(get_color_from_hex('#fafafa'))
+    color = ListProperty(get_color_from_hex('#26a69a80'))
+    bg_color = ListProperty(get_color_from_hex('#26a69a00'))
 
     def __init__(self, **kwargs):
         super(Field, self).__init__(**kwargs)
 
 
-class Seed(Image):
-    pass
+class Seed(Widget):
+    colors = [
+        '#e53935',
+        '#1e88e5',
+        '#43a047',
+        '#fdd835',
+        '#ab47bc',
+        '#8d6e63'
+    ]
+    color = StringProperty(colors[0])
 
 
 class Btn(ButtonBehavior, Widget):
     text = StringProperty('btn')
+    color = ListProperty(get_color_from_hex('#26a69a40'))
+    text_color = ListProperty(get_color_from_hex('#26a69a'))
 
     def __init__(self, **kwargs):
         super(Btn, self).__init__(**kwargs)
 
 
 class SoundBtn(ButtonBehavior, Image):
-    shadow_color = ListProperty(get_color_from_hex('#42424200'))
-
     def __init__(self, **kwargs):
         super(SoundBtn, self).__init__(**kwargs)
 
 
 class RotateBtn(ButtonBehavior, Image):
-    shadow_color = ListProperty(get_color_from_hex('#42424280'))
-
     def __init__(self, **kwargs):
         super(RotateBtn, self).__init__(**kwargs)
 
@@ -88,7 +95,6 @@ class ViewChoice(Widget):
 class SelectBox(ButtonBehavior, Widget):
     text = StringProperty('mode')
     select = BooleanProperty(False)
-    bg_color = ListProperty(get_color_from_hex('#fafafa'))
 
     def __init__(self, **kwargs):
         super(SelectBox, self).__init__(**kwargs)
@@ -99,10 +105,10 @@ class ViewMode(Widget):
 
 
 class MancalaApp(App):
+    Window.clearcolor = get_color_from_hex('#000000')
     if platform in ['win', 'linux', 'mac']:
         icon = 'data/icon.png'
         title = 'Mancala'
-        #Window.clearcolor = get_color_from_hex('#616161')
         Window.size = (800, 480)
         Window.left = 100
         Window.top = 100
@@ -110,7 +116,7 @@ class MancalaApp(App):
     board = ObjectProperty()
     fields = ListProperty([])
     seeds = ListProperty([])
-    seed_size = ListProperty([64, 64])    
+    seed_size = ListProperty([64, 64])
     game_seeds = NumericProperty(48)  # 72
     temp_game_seeds = NumericProperty(48)
     player_AI = BooleanProperty(True)
@@ -145,7 +151,7 @@ class MancalaApp(App):
     
     def on_start(self):
         self.board = self.root.ids.board
-        self.seed_size = [(self.board.width - 9*self.board.width/80)/8/3] * 2
+        self.seed_size = [(self.board.width - 9*self.board.width/80)/8/4] * 2
         self.fields = [[self.root.ids.field00, self.root.ids.field01, self.root.ids.field02, self.root.ids.field03, self.root.ids.field04, self.root.ids.field05, self.root.ids.field06],
                        [self.root.ids.field10, self.root.ids.field11, self.root.ids.field12, self.root.ids.field13, self.root.ids.field14, self.root.ids.field15, self.root.ids.field16]]
         
@@ -155,33 +161,34 @@ class MancalaApp(App):
         # sounds
         self.sound_click = SoundLoader.load('click.wav')
         self.sound_popup = SoundLoader.load('popup.wav')
-        self.sound_move  = SoundLoader.load('click.wav')
+        self.sound_move  = SoundLoader.load('move.wav')
         
         # exit dialog
-        self.view_exit = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False)
+        self.view_exit = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False, background = 'data/background.png')
         self.view_exit.add_widget(ViewChoice(text='Exit the game?'))
         self.view_exit.children[0].ids.yes_btn.bind(on_release=self.stop)
         
         # game over dialog
-        self.view_gameover = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False)
+        self.view_gameover = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False, background = 'data/background.png')
         self.view_gameover.add_widget(ViewInfo(text='* GAME OVER *'))
         
         # new game dialog
-        self.view_new = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False)
+        self.view_new = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False, background = 'data/background.png')
         self.view_new.add_widget(ViewMode(text='Start new game?'))
         self.view_new.children[0].ids.yes_btn.bind(on_release=self.new_game)
         
         # rotate dialog
-        self.view_rotate = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False)
+        self.view_rotate = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False, background = 'data/background.png')
         self.view_rotate.add_widget(ViewChoice(text='Rotate the board?'))
         self.view_rotate.children[0].ids.yes_btn.bind(on_release=self.rotate_board)
         
         # info dialog
-        self.view_info = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False)
+        self.view_info = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False, background = 'data/background.png')
         self.view_info.add_widget(ViewInfoBig())
         
         # bind's
         Window.bind(on_key_down=self.on_key_down)
+        if platform in ['win', 'linux', 'mac']: Window.bind(on_request_close=self.on_request_close)
         self.board.bind(size=Clock.schedule_once(self.resize, 0.150))
         
         # Android screen rotation ;)
@@ -214,16 +221,12 @@ class MancalaApp(App):
         else:
             self.start_game()
     
-    def seed_pos(self, row, col, ambar=False):
-        offset = self.board.width/80
-        field_width =  self.fields[0][0].width
-        field_height = self.fields[0][0].height
-        ambar_height = self.fields[0][6].height
-        
-        x = random.randint(math.ceil(field_width*col + offset*(col+1) + self.seed_size[0]*0.5),
-                           math.ceil(field_width*col + offset*(col+1) + field_width - self.seed_size[0]*1.0))
-        y = random.randint(math.ceil(self.board.y + field_height*row + offset*row + self.seed_size[0]*0.5 - (ambar_height - field_height if ambar and row == 1 else 0)),
-                           math.ceil(self.board.y + field_height*row + offset*row + (ambar_height if ambar and row == 0 else field_height) - self.seed_size[0]*1.5))
+    def seed_pos(self, row, col):
+        offset = self.board.width/80        
+        x = random.randint(math.ceil(self.fields[row][col].x + offset),
+                           math.ceil(self.fields[row][col].x + self.fields[row][col].width - offset - self.seed_size[0]))
+        y = random.randint(math.ceil(self.fields[row][col].y + offset),
+                           math.ceil(self.fields[row][col].y + self.fields[row][col].height - offset - self.seed_size[0]))
         
         return (x, y)
     
@@ -233,7 +236,7 @@ class MancalaApp(App):
         
         for c in range(int(self.game_seeds/12)):
             for s in range(12):
-                self.seeds[12*c + s].source = 'data/' + str(c+1) + '.png'
+                self.seeds[12*c + s].color = self.seeds[12*c + s].colors[c]
         
         # save matrix
         seeds_index = [e for e in range(self.game_seeds)]
@@ -246,7 +249,7 @@ class MancalaApp(App):
                     random_index = seeds_index.pop(seeds_index.index(random_choice))
                     self.fields[matrix_row][matrix_col].seeds.append(self.seeds[random_index])
                     self.board.add_widget(self.seeds[random_index])
-                    rand_pos = self.seed_pos(matrix_row, matrix_col + 1 if matrix_row == 0 else matrix_col, self.fields[matrix_row][matrix_col].is_ambar)
+                    rand_pos = self.seed_pos(matrix_row, matrix_col)
                     anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
                     anim.start(self.seeds[random_index])
                     
@@ -262,7 +265,7 @@ class MancalaApp(App):
         
         for c in range(int(self.game_seeds/12)):
             for s in range(12):
-                self.seeds[12*c + s].source = 'data/' + str(c+1) + '.png'
+                self.seeds[12*c + s].color = self.seeds[12*c + s].colors[c]
         
         moving = False
         
@@ -273,8 +276,8 @@ class MancalaApp(App):
                 self.board.add_widget(self.seeds[j + 12*i])
                 self.board.add_widget(self.seeds[j + 6 + 12*i])
                 
-                rand_pos1 = self.seed_pos(0, j+1, self.fields[0][j].is_ambar)
-                rand_pos2 = self.seed_pos(1, j+1, self.fields[1][j+1].is_ambar)
+                rand_pos1 = self.seed_pos(0, j)
+                rand_pos2 = self.seed_pos(1, j+1)
                 anim1 = Animation(pos=rand_pos1, duration=0.25, transition='linear')
                 anim2 = Animation(pos=rand_pos2, duration=0.25, transition='linear')
                 
@@ -502,7 +505,7 @@ class MancalaApp(App):
         moving = False
         
         for seed in self.hand:
-            rand_pos = self.seed_pos(self.board_row, self.board_col + (1 if self.board_row == 0 else 0), self.fields[self.board_row][self.board_col].is_ambar)
+            rand_pos = self.seed_pos(self.board_row, self.board_col)
             anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
             anim.start(seed)
             
@@ -565,7 +568,7 @@ class MancalaApp(App):
         moving = False
         
         for seed in self.hand:
-            rand_pos = self.seed_pos(self.player_turn, (7 if self.player_turn == 0 else 0), self.fields[self.player_turn][6 if self.player_turn == 0 else 0].is_ambar)
+            rand_pos = self.seed_pos(self.player_turn, (6 if self.player_turn == 0 else 0))
             anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
             anim.start(seed)
             
@@ -631,7 +634,7 @@ class MancalaApp(App):
         moving = False
         
         for seed in self.hand:
-            rand_pos = self.seed_pos(player, (7 if player == 0 else 0), self.fields[player][6 if player == 0 else 0].is_ambar)
+            rand_pos = self.seed_pos(player, (6 if player == 0 else 0))
             anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
             anim.start(seed)
             
@@ -707,7 +710,7 @@ class MancalaApp(App):
             for i in range(2):
                 for j, field in enumerate(self.fields[i]):
                     for seed in field.seeds:
-                        rand_pos = self.seed_pos(i, (j+1 if i == 0 else j), field.is_ambar)
+                        rand_pos = self.seed_pos(i, j)
                         anim = Animation(pos=rand_pos, duration=0.5, transition='linear')
                         anim.start(seed)
                         
@@ -720,8 +723,14 @@ class MancalaApp(App):
     
     def on_key_down(self, window, key, *args):
         if key in [27, 4]:  # ESC and BACK_BUTTON
+            if self.is_sound and self.sound_popup: self.sound_popup.play()
             self.view_exit.open()
             return True
+    
+    def on_request_close(self, *args):
+        if self.is_sound and self.sound_popup: self.sound_popup.play()
+        self.view_exit.open()
+        return True
     
     def save_data(self):
         self.store.put('game_seeds',       value=self.game_seeds)
@@ -733,16 +742,14 @@ class MancalaApp(App):
         self.store.put('save_player_turn', value=self.save_player_turn)
     
     def resize(self, *args):
-        self.seed_size = [(self.board.width - 9*self.board.width/80)/8/3] * 2
-        for i in range(7):
-            for elem1 in self.fields[0][i].seeds:
-                pos1 = self.seed_pos(0, i+1, self.fields[0][i].is_ambar)
-                anim1 = Animation(pos=pos1, duration=0.25, transition='linear')
-                anim1.start(elem1)
-            for elem2 in self.fields[1][i].seeds:
-                pos2 = self.seed_pos(1, i, self.fields[1][i].is_ambar)
-                anim2 = Animation(pos=pos2, duration=0.25, transition='linear')
-                anim2.start(elem2)
+        self.seed_size = [(self.board.width - 9*self.board.width/80)/8/4] * 2        
+        
+        for i in range(2):
+            for j, field in enumerate(self.fields[i]):
+                for seed in field.seeds:
+                    rand_pos = self.seed_pos(i, j)
+                    anim = Animation(pos=rand_pos, duration=0.25, transition='linear')
+                    anim.start(seed)
         
         # dialog's
         self.view_exit.size     = [self.board.height*2, self.board.height*1.25]

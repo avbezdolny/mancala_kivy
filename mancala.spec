@@ -4,9 +4,9 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['C:\\Projects\\kivyframework\\mancala_kivy'],
+             pathex=['C:\\Users\\avbez\\Desktop\\mancala_kivy'],
              binaries=[],
-             datas=[('mancala.kv', '.'), ('Rubik.ttf', '.'), ('click.wav', '.'), ('popup.wav', '.'), ('data/*.png', 'data')],
+             datas=[('mancala.kv', '.'), ('Rubik.ttf', '.'), ('click.wav', '.'), ('popup.wav', '.'), ('move.wav', '.'), ('data/*.png', 'data'), ('data/*.atlas', 'data')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -17,7 +17,7 @@ a = Analysis(['main.py'],
              noarchive=False)
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
-exe = EXE(pyz, Tree('C:\\Projects\\kivyframework\\mancala_kivy'),
+exe = EXE(pyz, Tree('C:\\Users\\avbez\\Desktop\\mancala_kivy'),
           a.scripts,
           a.binaries,
           a.zipfiles,
@@ -29,4 +29,4 @@ exe = EXE(pyz, Tree('C:\\Projects\\kivyframework\\mancala_kivy'),
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False, icon='C:\\Projects\\kivyframework\\mancala_kivy\\mancala.ico' )
+          console=False, icon='C:\\Users\\avbez\\Desktop\\mancala_kivy\\mancala.ico' )
