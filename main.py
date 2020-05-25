@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import kivy
-kivy.require('1.11.1')
-
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -161,7 +159,6 @@ class MancalaApp(App):
         # sounds
         self.sound_click = SoundLoader.load('click.wav')
         self.sound_popup = SoundLoader.load('popup.wav')
-        self.sound_move  = SoundLoader.load('move.wav')
         
         # exit dialog
         self.view_exit = ModalView(size_hint=(None, None), size=[self.board.height*2, self.board.height*1.25], auto_dismiss=False, background = 'data/background.png')
@@ -220,6 +217,10 @@ class MancalaApp(App):
         
         else:
             self.start_game()
+    
+    def sound_move_play(self):
+        sound_move  = SoundLoader.load('move.wav')
+        if sound_move: sound_move.play()
     
     def seed_pos(self, row, col):
         offset = self.board.width/80        
@@ -512,7 +513,7 @@ class MancalaApp(App):
             if not moving:
                 moving = True
                 anim.bind(on_complete=self.after_move)
-                if self.is_sound and self.sound_move: self.sound_move.play()
+                if self.is_sound: self.sound_move_play()
     
     def after_move(self, *args):
         if self.hand:
@@ -575,7 +576,7 @@ class MancalaApp(App):
             if not moving:
                 moving = True
                 anim.bind(on_complete=self.after_ambar)
-                if self.is_sound and self.sound_move: self.sound_move.play()
+                if self.is_sound: self.sound_move_play()
     
     def after_ambar(self, *args):
         if self.hand:
@@ -641,7 +642,7 @@ class MancalaApp(App):
             if not moving:
                 moving = True
                 anim.bind(on_complete=self.after_game_over)
-                if self.is_sound and self.sound_move: self.sound_move.play()
+                if self.is_sound: self.sound_move_play()
     
     def after_game_over(self, *args):
         for seed in self.hand:
