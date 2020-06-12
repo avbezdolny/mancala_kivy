@@ -145,7 +145,6 @@ class MancalaApp(App):
     is_sound = BooleanProperty(True)
     sound_click = None
     sound_popup = None
-    sound_move  = None
     
     def on_start(self):
         self.board = self.root.ids.board
